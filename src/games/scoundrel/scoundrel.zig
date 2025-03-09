@@ -68,6 +68,7 @@ fn StackBuffer(comptime T: type, N: comptime_int) type {
 }
 
 pub const Player = struct {
+    health: i32,
     score: i32,
 };
 
@@ -134,7 +135,7 @@ pub const Game = struct {
                 .dungeon = dungeon,
                 .discard = StackBuffer(Card, 44).init(),
             },
-            .player = .{ .score = 20 },
+            .player = .{ .health = 20, .score = 20 },
             .r = r,
         };
     }
@@ -180,13 +181,13 @@ pub const Game = struct {
         switch (target_card.card.suit) {
             .hearts => {
                 if (!self.healed) {
-                    self.player.score = @max(20, self.player.score + target_card.value);
+                    self.player.health = @min(20, self.player.health + target_card.value);
                 }
                 self.table.discard.add(target_card);
                 self.healed = true;
             },
             .clubs, .spades => {
-                self.player.score -= target_card.value;
+                self.player.health -= target_card.value;
                 self.table.discard.add(target_card);
             },
             .diamonds => {
@@ -200,6 +201,7 @@ pub const Game = struct {
                 self.table.weapon = target_card;
             },
         }
+        self.player.score = self.getScore();
     }
 
     pub fn canSlainMonster(self: *Game, i: usize) bool {
@@ -207,7 +209,10 @@ pub const Game = struct {
             return false;
 
         const target_card = self.table.room.buf[i];
-        const value = try self.table.slain_monsters.last().value catch 0;
+        const value = blk: {
+            const m = self.table.slain_monsters.last() catch break :blk 100;
+            break :blk m.value;
+        };
         if (target_card.value >= value)
             return false;
 
@@ -220,18 +225,29 @@ pub const Game = struct {
         const target_card = try self.table.room.pop(i);
         const damage = target_card.value - self.table.weapon.?.value;
         if (damage > 0) {
-            self.player.score -= damage;
+            self.player.health -= damage;
         }
         self.table.slain_monsters.add(target_card);
+        self.player.score = self.getScore();
     }
 
     pub fn hasWon(self: Game) bool {
         return self.table.dungeon.size == 0 and
             self.table.room.size == 0 and
-            self.player.score > 0;
+            self.player.health > 0;
     }
 
     pub fn hasLost(self: Game) bool {
-        return self.player.score <= 0;
+        return self.player.health <= 0;
+    }
+
+    pub fn getScore(self: Game) i32 {
+        if (self.table.dungeon.size == 0 and self.table.room.size == 1) {
+            const c = self.table.room.buf[0];
+            if (c.card.suit == .hearts and self.player.health == 20) {
+                return self.player.health + c.value;
+            }
+        }
+        return self.player.health;
     }
 };
