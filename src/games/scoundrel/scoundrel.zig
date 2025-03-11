@@ -113,7 +113,7 @@ pub const Game = struct {
                 const c = card.french_cards[index];
                 const value = getValue(c.short_name, t);
                 const suit: card.Suit = @enumFromInt(suit_i);
-                if ((suit == .hearts or suit == .diamonds) and (value > 10))
+                if ((suit == .hearts or suit == .diamonds) and (value > 10 or value == 1))
                     continue;
 
                 _cards[i] = Card{

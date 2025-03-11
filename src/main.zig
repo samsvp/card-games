@@ -17,7 +17,7 @@ pub fn main() anyerror!void {
 
     rlgui.guiLoadStyle("resources/style_terminal.rgs");
 
-    var game = try scoundrel.Game.init(.normal);
+    var game = try scoundrel.Game.init(.easy);
 
     rl.setTargetFPS(60);
 

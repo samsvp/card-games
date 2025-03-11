@@ -163,7 +163,7 @@ pub const Game = struct {
         {
             rl.drawText(
                 rl.textFormat("Health: %02i", .{self.game.player.health}),
-                @intFromFloat(0.8 * screen_width),
+                @intFromFloat(0.1 * screen_width),
                 @intFromFloat(0.1 * screen_height),
                 20,
                 rl.Color.ray_white,
